@@ -47,6 +47,7 @@ class HT33K16Component : public PollingComponent, public i2c::I2CDevice {
     uint8_t databuffer[17] = {}; // control byte and 16 display bytes
 
     uint8_t* buffer_ = databuffer + 1; // pointer to display bytes
+    
     optional<ht33k16_writer_t> writer_{};
 
     enum ErrorCode { NONE = 0, COMMUNICATION_FAILED } error_code_{NONE};
