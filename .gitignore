@@ -39,3 +39,8 @@
 
 # debug information files
 *.dwo
+
+# Test build artifacts
+tests/build/
+__pycache__/
+.pytest_cache/
