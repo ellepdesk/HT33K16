@@ -172,6 +172,7 @@ class _Lib:
             "ht_print_at": ([vp, u8, cp], u8),
             "ht_print": ([vp, cp], u8),
             "ht_printf3i": ([vp, cp, i32, i32, i32], u8),
+            "ht_printf2i1f": ([vp, cp, i32, i32, ctypes.c_double], u8),
             "ht_reg_system": ([vp, b], None),
             "ht_reg_display": ([vp, u8, b], None),
             "ht_reg_dimming": ([vp, u8], None),
@@ -293,6 +294,10 @@ class Display:
 
     def printf(self, fmt: str, a: int = 0, b: int = 0, c: int = 0) -> int:
         return self._lib.dll.ht_printf3i(self._handle, fmt.encode(), a, b, c)
+
+    def printf_f(self, fmt: str, a: int, b: int, c: float) -> int:
+        """printf() with two ints and a float, e.g. "%2i:%02i%2.1f.c"."""
+        return self._lib.dll.ht_printf2i1f(self._handle, fmt.encode(), a, b, c)
 
     def reg_system(self, osc: bool):
         self._lib.dll.ht_reg_system(self._handle, osc)

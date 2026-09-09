@@ -85,6 +85,16 @@ uint8_t ht_printf3i(void *handle, const char *format, int a, int b, int c) {
 #pragma GCC diagnostic pop
 }
 
+/// printf() taking two ints and a double, for "%2i:%02i%2.1f.c" style
+/// formats that render the temperature as a float.
+uint8_t ht_printf2i1f(void *handle, const char *format, int a, int b, double c) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#pragma GCC diagnostic ignored "-Wformat-security"
+  return static_cast<Harness *>(handle)->printf(format, a, b, c);
+#pragma GCC diagnostic pop
+}
+
 // --- register writes (protected on the component) ----------------------
 
 void ht_reg_system(void *handle, bool osc) { static_cast<Harness *>(handle)->reg_system(osc); }

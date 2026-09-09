@@ -130,6 +130,43 @@ def test_print_matches_the_reference_encoder(display, text):
     assert display.buffer == encode(text)
 
 
+@pytest.mark.parametrize("temp", [99.9, 23.4, 10.0, 9.9, 5.5, 0.0, -0.5, -5.5, -9.9])
+def test_float_width_four_is_three_positions(display, temp):
+    """The '.' in a float is a decimal point, so it costs no position:
+    "%4.1f" is four characters but three digits, the spare column holding
+    the sign. That is what keeps 9.9 and -9.9 aligned."""
+    display.fill(0x00)
+    assert display.printf_f("%4.1f", 0, 0, temp) == 3
+
+
+@pytest.mark.parametrize("temp", [9.9, 5.5, 0.0])
+def test_float_width_three_loses_the_sign_column(display, temp):
+    """Regression guard: "%3.1f" drops to two positions for single-digit
+    positives, which shifts everything after it one place left."""
+    display.fill(0x00)
+    assert display.printf_f("%3.1f", 0, 0, temp) == 2
+
+
+@pytest.mark.parametrize("temp", [99.9, 23.4, 9.9, 0.0, -0.5, -9.9])
+def test_wekker_float_format_always_fills_eight_digits(display, temp):
+    display.set_digits(8)
+    display.fill(0x00)
+    assert display.printf_f("%2i:%02i%4.1f.c", 14, 5, temp) == 8
+
+
+@pytest.mark.parametrize("temp", [-10.0, -15.2, -40.0, 100.5, 999.0])
+def test_wekker_whole_degree_fallback_fills_eight_digits(display, temp):
+    """Below -10 the tenths no longer fit alongside the 'c'."""
+    display.set_digits(8)
+    display.fill(0x00)
+    assert display.printf_f("%2i:%02i%3.0f.c", 14, 5, temp) == 8
+
+
+def test_wekker_placeholder_fills_eight_digits(display):
+    display.set_digits(8)
+    assert display.print("--:----- ") == 8
+
+
 def test_segment_table_agrees_with_a_single_char_print(display):
     for char, pattern in SEG7.items():
         display.fill(0x00)
