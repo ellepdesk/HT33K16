@@ -3,6 +3,8 @@ from esphome.components import display, i2c
 import esphome.config_validation as cv
 from esphome.const import CONF_ID, CONF_INTENSITY, CONF_LAMBDA
 
+CONF_DIGITS = "digits"
+
 DEPENDENCIES = ["i2c"]
 
 ht33k16_ns = cg.esphome_ns.namespace("ht33k16")
@@ -17,6 +19,7 @@ CONFIG_SCHEMA = (
         {
             cv.GenerateID(): cv.declare_id(HT33K16Component),
             cv.Optional(CONF_INTENSITY, default=15): cv.int_range(min=0, max=15),
+            cv.Optional(CONF_DIGITS, default=16): cv.int_range(min=1, max=16),
         }
     )
     .extend(cv.COMPONENT_SCHEMA)
@@ -30,6 +33,7 @@ async def to_code(config):
     await i2c.register_i2c_device(var, config)
 
     cg.add(var.set_intensity(config[CONF_INTENSITY]))
+    cg.add(var.set_digits(config[CONF_DIGITS]))
 
     if CONF_LAMBDA in config:
         lambda_ = await cg.process_lambda(

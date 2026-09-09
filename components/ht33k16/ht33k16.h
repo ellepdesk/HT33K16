@@ -28,6 +28,9 @@ class HT33K16Component : public PollingComponent, public i2c::I2CDevice {
     void set_enable(bool);
     void set_blink(blink);
     void set_intensity(uint8_t);
+    /// Number of digits physically fitted to the panel. Text past this is
+    /// dropped with a warning; the driver cannot see it otherwise.
+    void set_digits(uint8_t);
 
     /// Evaluate the printf-format and print the result at position 0.
     uint8_t printf(const char *format, ...) __attribute__((format(printf, 2, 3)));
@@ -45,6 +48,7 @@ class HT33K16Component : public PollingComponent, public i2c::I2CDevice {
     blink blinking{blink::OFF};
     bool reg_display_changed{true};
 
+    uint8_t digits_{DISPLAY_POSITIONS};  // digits actually fitted to the panel
     uint8_t intensity_{15};     // Intensity of the display from 0 to 15 (most)
     bool intensity_changed_{true};  // True if we need to re-send the intensity
     uint8_t databuffer[17] = {}; // control byte and 16 display bytes

@@ -28,6 +28,7 @@ class Harness : public HT33K16Component {
  public:
   const uint8_t *databuffer_ptr() const { return this->databuffer; }
   uint8_t intensity() const { return this->intensity_; }
+  uint8_t digits() const { return this->digits_; }
   bool intensity_changed() const { return this->intensity_changed_; }
   bool enabled_flag() const { return this->enabled; }
   uint8_t blink_mode() const { return static_cast<uint8_t>(this->blinking); }
@@ -61,6 +62,8 @@ void ht_dump_config(void *handle) { static_cast<Harness *>(handle)->dump_config(
 void ht_fill(void *handle, uint8_t c) { static_cast<Harness *>(handle)->fill(c); }
 
 void ht_set_intensity(void *handle, uint8_t dim) { static_cast<Harness *>(handle)->set_intensity(dim); }
+void ht_set_digits(void *handle, uint8_t digits) { static_cast<Harness *>(handle)->set_digits(digits); }
+uint8_t ht_get_digits(void *handle) { return static_cast<Harness *>(handle)->digits(); }
 void ht_set_enable(void *handle, bool enable) { static_cast<Harness *>(handle)->set_enable(enable); }
 void ht_set_blink(void *handle, uint8_t b) {
   static_cast<Harness *>(handle)->set_blink(static_cast<HT33K16Component::blink>(b));

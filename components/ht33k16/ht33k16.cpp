@@ -98,6 +98,14 @@ namespace ht33k16 {
         update();
     }
 
+    void HT33K16Component::set_digits(uint8_t digits){
+        if (digits == 0 || digits > DISPLAY_POSITIONS) {
+            ESP_LOGW(TAG, "digits %u out of range, clamping to %u", digits, DISPLAY_POSITIONS);
+            digits = DISPLAY_POSITIONS;
+        }
+        digits_ = digits;
+    }
+
     void HT33K16Component::set_intensity(uint8_t dim){
         if (intensity_ != dim)
         {
@@ -166,9 +174,9 @@ namespace ht33k16 {
                 data = 0x80;  // set dp and read next char
                 continue;
             }
-            if (pos >= DISPLAY_POSITIONS) {  // ran off the end of the display
-                ESP_LOGW(TAG, "'%s' does not fit at position %u, truncated after %u digits",
-                         text, start_pos, pos - start_pos);
+            if (pos >= digits_) {  // ran off the end of the panel
+                ESP_LOGW(TAG, "'%s' does not fit in %u digits at position %u, truncated after %u",
+                         text, digits_, start_pos, pos - start_pos);
                 break;
             }
             data |= char_to_seg7(*str);  // translate ascii to 7 segements
@@ -194,9 +202,10 @@ namespace ht33k16 {
 
     void HT33K16Component::dump_config() {
     ESP_LOGCONFIG(TAG,
-                    "HT33K16 @ 0x%x  intensity: %u",
+                    "HT33K16 @ 0x%x  intensity: %u  digits: %u",
                     this->address_,
-                    this->intensity_
+                    this->intensity_,
+                    this->digits_
                 );
     }
 

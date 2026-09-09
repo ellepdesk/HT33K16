@@ -165,6 +165,8 @@ class _Lib:
             "ht_dump_config": ([vp], None),
             "ht_fill": ([vp, u8], None),
             "ht_set_intensity": ([vp, u8], None),
+            "ht_set_digits": ([vp, u8], None),
+            "ht_get_digits": ([vp], u8),
             "ht_set_enable": ([vp, b], None),
             "ht_set_blink": ([vp, u8], None),
             "ht_print_at": ([vp, u8, cp], u8),
@@ -269,6 +271,13 @@ class Display:
 
     def set_intensity(self, dim: int):
         self._lib.dll.ht_set_intensity(self._handle, dim)
+
+    def set_digits(self, digits: int):
+        self._lib.dll.ht_set_digits(self._handle, digits)
+
+    @property
+    def digits(self) -> int:
+        return self._lib.dll.ht_get_digits(self._handle)
 
     def set_enable(self, enable: bool):
         self._lib.dll.ht_set_enable(self._handle, enable)
