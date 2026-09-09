@@ -39,6 +39,22 @@ namespace ht33k16 {
         buffer[row * 2 + 1] = d_high;
     }
 
+    // Physical digit order. The panel is built from two banks of four digits,
+    // with the left-hand bank wired to ROW4-7 and the right-hand bank to
+    // ROW0-3, so writing position 0 straight through would land it halfway
+    // across the display. DIGIT_MAP[n] is the ROW output driving the n-th
+    // digit counted from the left.
+    static const uint8_t DIGIT_MAP[HT33K16Component::DISPLAY_POSITIONS] = {
+         4,  5,  6,  7,  0,  1,  2,  3,
+        12, 13, 14, 15,  8,  9, 10, 11,
+    };
+
+    uint8_t map_position(uint8_t pos){
+        if (pos >= HT33K16Component::DISPLAY_POSITIONS)
+            return pos;
+        return DIGIT_MAP[pos];
+    }
+
     uint8_t char_to_seg7(uint8_t c){
         switch (c){
             case '0':
@@ -141,6 +157,7 @@ namespace ht33k16 {
     }
 
     uint8_t HT33K16Component::print(uint8_t start_pos, const char *str) {
+        const char *text = str;  // kept for the truncation warning
         uint8_t pos = start_pos;
         uint8_t data = 0x00;
         for (; *str != '\0'; str++) { // iterate over str until eol
@@ -149,8 +166,13 @@ namespace ht33k16 {
                 data = 0x80;  // set dp and read next char
                 continue;
             }
+            if (pos >= DISPLAY_POSITIONS) {  // ran off the end of the display
+                ESP_LOGW(TAG, "'%s' does not fit at position %u, truncated after %u digits",
+                         text, start_pos, pos - start_pos);
+                break;
+            }
             data |= char_to_seg7(*str);  // translate ascii to 7 segements
-            set_col(buffer_, pos, data);
+            set_col(buffer_, map_position(pos), data);
             data = 0x00;
             pos++;
         }

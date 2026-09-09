@@ -2,7 +2,7 @@
 
 import pytest
 
-from harness import SEG_DP, SEG7, encode
+from harness import SEG_DP, SEG7, bit_for, encode
 
 
 def test_print_returns_number_of_digits_written(display):
@@ -48,8 +48,9 @@ def test_colon_sets_the_decimal_point_of_the_following_digit(display):
     display.print("1:2")
     # '1' at position 0 plain, '2' at position 1 with dp.
     assert display.buffer == encode("1:2")
-    # And concretely: the dp bit is segment 7, so byte 14, bit 1.
-    assert display.buffer[14] == 0b00000010
+    # And concretely: the dp is segment 7, and position 1 is driven by ROW5.
+    byte, bit = bit_for(1, 7)
+    assert display.buffer[byte] == 1 << bit
 
 
 def test_period_behaves_like_colon(display):
@@ -65,15 +66,17 @@ def test_trailing_dp_is_dropped(display):
 
 def test_dp_does_not_leak_into_later_digits(display):
     display.print("1.23")
-    assert display.buffer[14] == 0b00000010  # only position 1 has the dp
+    byte, bit = bit_for(1, 7)
+    assert display.buffer[byte] == 1 << bit  # only position 1 has the dp
 
 
 def test_unknown_characters_blank_their_position(display):
     display.print("1X2")
     assert display.buffer == encode("1X2")
     # 'X' occupies position 1 but lights nothing.
-    for byte in range(0, 16, 2):
-        assert not display.buffer[byte] & (1 << 1)
+    for segment in range(8):
+        byte, bit = bit_for(1, segment)
+        assert not display.buffer[byte] & (1 << bit)
 
 
 def test_print_overwrites_previous_content_at_the_same_position(display):
@@ -132,11 +135,13 @@ def test_segment_table_agrees_with_a_single_char_print(display):
         display.fill(0x00)
         display.print(char)
         for segment in range(8):
-            lit = bool(display.buffer[segment * 2] & 0x01)
+            byte, bit = bit_for(0, segment)
+            lit = bool(display.buffer[byte] & (1 << bit))
             assert lit == bool(pattern >> segment & 1), f"{char!r} segment {segment}"
 
 
 def test_decimal_point_is_bit_seven(display):
     display.print(".8")
-    assert display.buffer[14] & 0x01, "dp not set"
+    byte, bit = bit_for(0, 7)
+    assert display.buffer[byte] & (1 << bit), "dp not set"
     assert SEG_DP == 0x80

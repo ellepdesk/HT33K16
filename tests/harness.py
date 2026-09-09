@@ -19,6 +19,9 @@ LIB_PATH = TESTS_DIR / "build" / "libht33k16_test.so"
 DISPLAY_BYTES = 16
 TRANSFER_BYTES = DISPLAY_BYTES + 1
 
+# Digit positions the HT16K33 can drive.
+DISPLAY_POSITIONS = 16
+
 # Blink modes, mirroring HT33K16Component::blink.
 BLINK_OFF = 0
 BLINK_2HZ = 1
@@ -61,6 +64,21 @@ SEG7 = {
 
 DP_CHARS = ":."
 
+# Physical digit order of the panel: the left-hand bank of four digits is
+# wired to ROW4-7, the right-hand bank to ROW0-3. DIGIT_MAP[n] is the ROW
+# output driving the n-th digit counted from the left. Kept here as well as
+# in the driver so a change to one has to be a deliberate change to both.
+DIGIT_MAP = [
+    4, 5, 6, 7, 0, 1, 2, 3,
+    12, 13, 14, 15, 8, 9, 10, 11,
+]
+
+
+def bit_for(position: int, segment: int) -> tuple[int, int]:
+    """Which (display byte, bit) a segment of a logical digit position lands in."""
+    col = DIGIT_MAP[position]
+    return segment * 2 + col // 8, col % 8
+
 
 def build() -> Path:
     """(Re)build the shared object. Cheap and idempotent; make handles it."""
@@ -74,6 +92,8 @@ def encode(text: str, start: int = 0) -> bytes:
     Deliberately written in the flat, obvious way (byte = segment * 2 +
     column // 8) rather than mirroring the driver's set_col/set_bit
     recursion, so that agreement between the two means something.
+
+    Text that runs past the last position is truncated, matching print().
     """
     buf = bytearray(DISPLAY_BYTES)
     pos = start
@@ -82,10 +102,13 @@ def encode(text: str, start: int = 0) -> bytes:
         if char in DP_CHARS:
             data = SEG_DP  # set dp and read next char
             continue
+        if pos >= DISPLAY_POSITIONS:
+            break
         data |= SEG7.get(char, 0)
         for segment in range(8):
             if (data >> segment) & 1:
-                buf[segment * 2 + (pos // 8)] |= 1 << (pos % 8)
+                byte, bit = bit_for(pos, segment)
+                buf[byte] |= 1 << bit
         data = 0
         pos += 1
     return bytes(buf)
@@ -160,6 +183,8 @@ class _Lib:
             "ht_set_col": ([u8p, u8, u8], None),
             "ht_set_row": ([u8p, u8, u16], None),
             "ht_char_to_seg7": ([u8], u8),
+            "ht_map_position": ([u8], u8),
+            "ht_display_positions": ([], u8),
             "ht_i2c_clear": ([], None),
             "ht_i2c_count": ([], i32),
             "ht_i2c_address": ([i32], i32),
@@ -174,6 +199,16 @@ class _Lib:
 def char_to_seg7(char: str) -> int:
     """Call the driver's ascii -> 7-segment conversion."""
     return _Lib().dll.ht_char_to_seg7(ord(char))
+
+
+def map_position(pos: int) -> int:
+    """Call the driver's logical position -> ROW output mapping."""
+    return _Lib().dll.ht_map_position(pos)
+
+
+def display_positions() -> int:
+    """The driver's DISPLAY_POSITIONS constant."""
+    return _Lib().dll.ht_display_positions()
 
 
 def set_bit(buffer: bytearray, row: int, col: int, bit: bool) -> bytearray:

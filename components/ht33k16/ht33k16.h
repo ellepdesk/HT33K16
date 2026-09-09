@@ -15,6 +15,9 @@ class HT33K16Component : public PollingComponent, public i2c::I2CDevice {
  public:
     enum class blink : uint8_t {OFF=0, HZ_2, HZ_1, HZ_05};
 
+    /// Number of digit positions the HT16K33 can drive.
+    static constexpr uint8_t DISPLAY_POSITIONS = 16;
+
     void set_writer(ht33k16_writer_t &&writer);
     void setup() override;
     void dump_config() override;

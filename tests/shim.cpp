@@ -15,6 +15,7 @@ void set_bit(uint8_t *buffer, uint8_t row, uint8_t col, bool bit);
 void set_col(uint8_t *buffer, uint8_t col, uint8_t data);
 void set_row(uint8_t *buffer, uint8_t row, uint16_t data);
 uint8_t char_to_seg7(uint8_t c);
+uint8_t map_position(uint8_t pos);
 }  // namespace ht33k16
 }  // namespace esphome
 
@@ -110,6 +111,8 @@ void ht_set_bit(uint8_t *buffer, uint8_t row, uint8_t col, bool bit) {
 void ht_set_col(uint8_t *buffer, uint8_t col, uint8_t data) { esphome::ht33k16::set_col(buffer, col, data); }
 void ht_set_row(uint8_t *buffer, uint8_t row, uint16_t data) { esphome::ht33k16::set_row(buffer, row, data); }
 uint8_t ht_char_to_seg7(uint8_t c) { return esphome::ht33k16::char_to_seg7(c); }
+uint8_t ht_map_position(uint8_t pos) { return esphome::ht33k16::map_position(pos); }
+uint8_t ht_display_positions() { return HT33K16Component::DISPLAY_POSITIONS; }
 
 // --- captured i2c traffic ---------------------------------------------
 
